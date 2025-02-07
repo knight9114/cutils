@@ -29,6 +29,7 @@ void array_list_free(void *ptr) {
     for (size_t i = 0; i < l->length; i++) {
       array_list_free_value(l, i);
     }
+    free(l->backing);
     free(l);
   }
 }
@@ -111,7 +112,7 @@ cutils_error_t array_list_remove_at(array_list_t *l, size_t idx, void **value) {
   }
   l->backing[l->length - 1] = NULL;
 
-  l->backing--;
+  l->length--;
 
   return CUTILS_SUCCESS;
 }

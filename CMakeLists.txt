@@ -11,6 +11,7 @@ target_sources(cutils
 	PRIVATE
 		src/cutils/array_list.c
 		src/cutils/errors.c
+		src/cutils/hashmap.c
 		src/cutils/linked_list.c
 )
 target_include_directories(cutils

@@ -108,7 +108,9 @@ cutils_error_t array_list_remove_at(array_list_t *l, size_t idx, void **value) {
   }
 
   for (size_t i = idx; i < l->length; i++) {
-    l->backing[i] = l->backing[i + 1];
+    if (i != l->length - 1) {
+      l->backing[i] = l->backing[i + 1];
+    }
   }
   l->backing[l->length - 1] = NULL;
 

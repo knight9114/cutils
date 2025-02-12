@@ -13,6 +13,7 @@ target_sources(cutils
 		src/cutils/errors.c
 		src/cutils/hashmap.c
 		src/cutils/linked_list.c
+		src/cutils/md5.c
 )
 target_include_directories(cutils
 	PUBLIC

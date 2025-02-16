@@ -8,9 +8,11 @@
 #include <stdlib.h>
 
 void hashmap_entry_free(void (*inner_free)(void *), void *ptr) {
-  if (inner_free && ptr) {
+  if (ptr) {
     hashmap_entry_t *entry = ptr;
-    inner_free(entry->value);
+    if (inner_free) {
+      inner_free(entry->value);
+    }
     free(ptr);
   }
 }

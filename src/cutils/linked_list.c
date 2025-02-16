@@ -51,6 +51,9 @@ void linked_list_free_value(linked_list_t *l, linked_list_node_t *node) {
       l->outer_free(l->inner_free, node->value);
     } else if (l->inner_free) {
       l->inner_free(node->value);
+    } else if (l->outer_free) {
+      // Special case: composite type with stack-allocated value
+      free(node->value);
     }
   }
 }

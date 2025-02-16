@@ -139,7 +139,9 @@ cutils_error_t hashmap_insert(hashmap_t *m, void *key, void *value) {
   while (curr) {
     hashmap_entry_t *entry = curr->value;
     if (entry->key == hash) {
-      m->inner_free(entry->value);
+      if (m->inner_free) {
+        m->inner_free(entry->value);
+      }
       entry->value = value;
       break;
     }

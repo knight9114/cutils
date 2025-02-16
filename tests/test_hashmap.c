@@ -77,7 +77,7 @@ void test_hashmap_init_and_free(void) {
 }
 
 void test_hashmap_insert(void) {
-  printf("testing hashmap_insert ... ");
+  printf("testing hashmap_insert heap-allocated ... ");
 
   hashmap_t *m = malloc(sizeof(hashmap_t));
   cutils_error_t err = hashmap_init(m, 10, hash_key, inner_free);
@@ -137,8 +137,8 @@ void test_hashmap_resize(void) {
   assert(err == CUTILS_SUCCESS);
   linked_list_t *l00 = NULL;
   linked_list_t *l10 = NULL;
-  assert(array_list_get(m->chains, 0, (void **) &l00) == CUTILS_SUCCESS);
-  assert(array_list_get(m->chains, 0, (void **) &l10) == CUTILS_SUCCESS);
+  assert(array_list_get(m->chains, 0, (void **)&l00) == CUTILS_SUCCESS);
+  assert(array_list_get(m->chains, 0, (void **)&l10) == CUTILS_SUCCESS);
   assert(l00->length == 1);
   assert(l10->length == 1);
 
@@ -173,7 +173,7 @@ void test_hashmap_remove(void) {
 
   size_t k4 = 12345;
   test_data_t *v4 = NULL;
-  err = hashmap_remove(m, &k4, (void **) &v4);
+  err = hashmap_remove(m, &k4, (void **)&v4);
   assert(err == CUTILS_INDEX_ERROR);
 
   hashmap_free(m);
@@ -215,9 +215,50 @@ void test_hashmap_get(void) {
   printf("success\n");
 }
 
+void test_hashmap_stack_insert(void) {
+  printf("testing hashmap_insert stack-allocated ... ");
+
+  hashmap_t *m = malloc(sizeof(hashmap_t));
+  cutils_error_t err = hashmap_init(m, 10, hash_key, NULL);
+  assert(err == CUTILS_SUCCESS);
+  assert(m->length == 0);
+
+  size_t k1 = 11;
+  size_t v1 = 11;;
+  err = hashmap_insert(m, &k1, &v1);
+  assert(err == CUTILS_SUCCESS);
+  linked_list_t *l1 = m->chains->backing[1];
+  hashmap_entry_t *e1 = l1->head->value;
+  assert(l1->length == 1);
+  assert(*(size_t *)e1->value == 11);
+
+  size_t k2 = 21;
+  size_t v2 = 21;
+  err = hashmap_insert(m, &k2, &v2);
+  assert(err == CUTILS_SUCCESS);
+  linked_list_t *l2 = m->chains->backing[1];
+  hashmap_entry_t *e2 = l2->head->next->value;
+  assert(l2->length == 2);
+  assert(*(size_t *)e2->value == 21);
+
+  size_t k3 = 11;
+  size_t v3 = 23;
+  err = hashmap_insert(m, &k3, &v3);
+  assert(err == CUTILS_SUCCESS);
+  linked_list_t *l3 = m->chains->backing[1];
+  hashmap_entry_t *e3 = l3->head->value;
+  assert(l3->length == 2);
+  assert(*(size_t *)e3->value == 23);
+
+  hashmap_free(m);
+
+  printf("success\n");
+}
+
 int main(void) {
   test_hashmap_init_and_free();
   test_hashmap_insert();
+  test_hashmap_stack_insert();
   test_hashmap_resize();
   test_hashmap_remove();
   test_hashmap_get();

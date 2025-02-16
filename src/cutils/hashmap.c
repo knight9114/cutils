@@ -13,7 +13,7 @@ void hashmap_entry_free(void (*inner_free)(void *), void *ptr) {
     if (inner_free) {
       inner_free(entry->value);
     }
-    free(ptr);
+    free(entry);
   }
 }
 

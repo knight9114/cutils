@@ -26,5 +26,7 @@ cutils_error_t array_list_remove_at(array_list_t *l, size_t idx, void **value);
 cutils_error_t array_list_pop(array_list_t *l, void **value);
 cutils_error_t array_list_get(array_list_t *l, size_t idx, void **value);
 cutils_error_t array_list_set(array_list_t *l, size_t idx, void *value);
+cutils_error_t array_list_find(array_list_t *l, void *value,
+                               bool (*cmp)(void *, void *), size_t *idx);
 
 #endif // __CUTILS_ARRAY_LIST_H__

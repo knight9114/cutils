@@ -151,3 +151,19 @@ cutils_error_t array_list_set(array_list_t *l, size_t idx, void *value) {
 
   return CUTILS_SUCCESS;
 }
+
+cutils_error_t array_list_find(array_list_t *l, void *value,
+                               bool (*cmp)(void *, void *), size_t *idx) {
+  if (!l) {
+    return CUTILS_NULL_ERROR;
+  }
+
+  for (size_t i = 0; i < l->length; i++) {
+    if (cmp(l->backing[i], value)) {
+      *idx = i;
+      break;
+    }
+  }
+
+  return CUTILS_SUCCESS;
+}

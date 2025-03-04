@@ -49,6 +49,15 @@ void outer_free(void (*fn)(void *), void *ptr) {
   }
 }
 
+bool cmp(void *lhs, void *rhs) {
+  if (lhs && rhs) {
+    test_data_t *l = lhs;
+    test_data_t *r = rhs;
+    return l->d->n == r->d->n;
+  }
+  return lhs == NULL && rhs == NULL;
+}
+
 bool verify_value(void *lhs, size_t n) {
   if (lhs) {
     test_data_t *l = lhs;
@@ -398,6 +407,51 @@ void test_linked_list_set(void) {
   printf("success\n");
 }
 
+void test_linked_list_find(void) {
+  printf("testing linked_list_find ... ");
+
+  linked_list_t *l = malloc(sizeof(linked_list_t));
+  cutils_error_t err = linked_list_init(l, inner_free, outer_free);
+  assert(err == CUTILS_SUCCESS);
+  assert(l->length == 0);
+
+  test_data_t *v1 = _new(2);
+  err = linked_list_push_back(l, v1);
+  assert(err == CUTILS_SUCCESS);
+  test_data_t *v2 = _new(4);
+  err = linked_list_push_back(l, v2);
+  assert(err == CUTILS_SUCCESS);
+  test_data_t *v3 = _new(8);
+  err = linked_list_push_back(l, v3);
+  assert(err == CUTILS_SUCCESS);
+
+  size_t idx = SIZE_MAX;
+  err = linked_list_find(l, v1, cmp, &idx);
+  assert(err == CUTILS_SUCCESS);
+  assert(idx == 0);
+
+  idx = SIZE_MAX;
+  err = linked_list_find(l, v2, cmp, &idx);
+  assert(err == CUTILS_SUCCESS);
+  assert(idx == 1);
+
+  idx = SIZE_MAX;
+  err = linked_list_find(l, v3, cmp, &idx);
+  assert(err == CUTILS_SUCCESS);
+  assert(idx == 2);
+
+  test_data_t *v4 = _new(1);
+  idx = SIZE_MAX;
+  err = linked_list_find(l, v4, cmp, &idx);
+  assert(err == CUTILS_SUCCESS);
+  assert(idx == SIZE_MAX);
+
+  outer_free(inner_free, v4);
+  linked_list_free(l);
+
+  printf("success\n");
+}
+
 int main(void) {
   test_linked_list_init_and_free();
   test_linked_list_insert_at();
@@ -408,5 +462,6 @@ int main(void) {
   test_linked_list_pop_back();
   test_linked_list_get();
   test_linked_list_set();
+  test_linked_list_find();
   return EXIT_SUCCESS;
 }

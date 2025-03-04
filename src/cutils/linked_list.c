@@ -203,3 +203,21 @@ cutils_error_t linked_list_set(linked_list_t *l, size_t idx, void *value) {
 
   return CUTILS_SUCCESS;
 }
+
+cutils_error_t linked_list_find(linked_list_t *l, void *value,
+                                bool (*cmp)(void *, void *), size_t *idx) {
+  if (!l) {
+    return CUTILS_NULL_ERROR;
+  }
+
+  linked_list_node_t *curr = l->head;
+  for (size_t i = 0; i < l->length; i++) {
+    if (cmp(curr->value, value)) {
+      *idx = i;
+      break;
+    }
+    curr = curr->next;
+  }
+
+  return CUTILS_SUCCESS;
+}

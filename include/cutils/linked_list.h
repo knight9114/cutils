@@ -35,5 +35,7 @@ cutils_error_t linked_list_pop_front(linked_list_t *l, void **value);
 cutils_error_t linked_list_pop_back(linked_list_t *l, void **value);
 cutils_error_t linked_list_get(linked_list_t *l, size_t idx, void **value);
 cutils_error_t linked_list_set(linked_list_t *l, size_t idx, void *value);
+cutils_error_t linked_list_find(linked_list_t *l, void *value,
+                                bool (*cmp)(void *, void *), size_t *idx);
 
 #endif // __CUTILS_LINKED_LIST_H__

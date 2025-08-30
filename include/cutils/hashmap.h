@@ -9,10 +9,9 @@
 
 typedef struct {
   uint64_t key;
+  void *original_key;
   void *value;
 } hashmap_entry_t;
-
-void hashmap_entry_free(void (*inner_free)(void *), void *);
 
 typedef struct {
   size_t length;
@@ -20,11 +19,15 @@ typedef struct {
   size_t nlinks;
   array_list_t *chains;
   uint64_t (*hash)(void *);
+  bool (*key_cmp)(void *, void *);
+  void (*key_free)(void *);
   void (*inner_free)(void *);
 } hashmap_t;
 
 cutils_error_t hashmap_init(hashmap_t *m, size_t nchains,
                             uint64_t (*hash)(void *),
+                            bool (*key_cmp)(void *, void *),
+                            void (*key_free)(void *),
                             void (*inner_free)(void *));
 void hashmap_free(void *ptr);
 cutils_error_t hashmap_resize(hashmap_t *m, size_t nchains);

@@ -119,7 +119,6 @@ void test_hashmap_insert(void) {
   test_data_t *v3 = _new(8);
   err = hashmap_insert(m, k3, v3);
   assert(err == CUTILS_SUCCESS);
-  free(k3); // Key not used, insert should have replaced old value.
   linked_list_t *l3 = NULL;
   array_list_get(m->chains, 1, (void **)&l3);
   hashmap_entry_t *e3 = l3->head->value;
@@ -277,7 +276,7 @@ void test_hashmap_stack_insert(void) {
   hashmap_entry_t *e3 = l3->head->value;
   assert(l3->length == 2);
   assert(*(size_t *)e3->value == 23);
-  assert(e3->original_key == &k1);
+  assert(e3->original_key == &k3);
 
   hashmap_free(m);
 

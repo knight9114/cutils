@@ -295,7 +295,7 @@ void test_hashmap_stack_insert(void) {
   hashmap_entry_t *e3 = l3->head->value;
   assert(l3->length == 2);
   assert(*(size_t *)e3->value == 23);
-  assert(e3->original_key == &k1);
+  assert(e3->original_key == &k3);
 
   hashmap_free(m);
 

@@ -174,13 +174,14 @@ cutils_error_t hashmap_insert(hashmap_t *m, void *key, void *value) {
     hashmap_entry_t *entry = curr->value;
     if (entry->key == hash && m->key_cmp(entry->original_key, key)) {
       if (m->key_free) {
-        m->key_free(key);
+        m->key_free(entry->original_key);
       }
 
       if (m->inner_free) {
         m->inner_free(entry->value);
       }
 
+      entry->original_key = key;
       entry->value = value;
       return CUTILS_SUCCESS;
     }

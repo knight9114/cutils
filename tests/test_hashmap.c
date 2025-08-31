@@ -97,6 +97,7 @@ void test_hashmap_insert(void) {
   test_data_t *v1 = _new(2);
   err = hashmap_insert(m, k1, v1);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 1);
   linked_list_t *l1 = NULL;
   array_list_get(m->chains, 1, (void **)&l1);
   hashmap_entry_t *e1 = l1->head->value;
@@ -108,6 +109,7 @@ void test_hashmap_insert(void) {
   test_data_t *v2 = _new(4);
   err = hashmap_insert(m, k2, v2);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
   linked_list_t *l2 = NULL;
   array_list_get(m->chains, 1, (void **)&l2);
   hashmap_entry_t *e2 = l2->head->next->value;
@@ -119,6 +121,8 @@ void test_hashmap_insert(void) {
   test_data_t *v3 = _new(8);
   err = hashmap_insert(m, k3, v3);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
+
   linked_list_t *l3 = NULL;
   array_list_get(m->chains, 1, (void **)&l3);
   hashmap_entry_t *e3 = l3->head->value;
@@ -149,9 +153,12 @@ void test_hashmap_resize(void) {
   test_data_t *v2 = _new(4);
   err = hashmap_insert(m, k2, v2);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
 
   err = hashmap_resize(m, 11);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
+
   linked_list_t *l0 = NULL;
   linked_list_t *l10 = NULL;
   assert(array_list_get(m->chains, 0, (void **)&l0) == CUTILS_SUCCESS);
@@ -182,6 +189,7 @@ void test_hashmap_remove(void) {
   test_data_t *v2 = _new(4);
   err = hashmap_insert(m, k2, v2);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
 
   test_data_t *v3 = NULL;
   err = hashmap_remove(m, k1, (void **)&v3);
@@ -190,10 +198,18 @@ void test_hashmap_remove(void) {
   assert(m->length == 1);
   inner_free(v3);
 
+  test_data_t *v_out = NULL;
+  err = hashmap_remove(m, k2, (void **)&v_out);
+  assert(err == CUTILS_SUCCESS);
+  assert(verify_value(v_out, 4));
+  assert(m->length == 0);
+  inner_free(v_out);
+
   size_t k4 = 12345;
   test_data_t *v4 = NULL;
   err = hashmap_remove(m, &k4, (void **)&v4);
   assert(err == CUTILS_INDEX_ERROR);
+  assert(m->length == 0);
 
   hashmap_free(m);
 
@@ -206,7 +222,6 @@ void test_hashmap_get(void) {
   hashmap_t *m = malloc(sizeof(hashmap_t));
   cutils_error_t err = hashmap_init(m, 10, hash_key, cmp_key, free, inner_free);
   assert(err == CUTILS_SUCCESS);
-  assert(m->length == 0);
 
   size_t *k1 = malloc(sizeof(size_t));
   *k1 = 11;
@@ -219,6 +234,7 @@ void test_hashmap_get(void) {
   test_data_t *v2 = _new(4);
   err = hashmap_insert(m, k2, v2);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
 
   test_data_t *v3 = NULL;
   err = hashmap_get(m, k2, (void **)&v3);
@@ -249,6 +265,7 @@ void test_hashmap_stack_insert(void) {
   size_t v1 = 11;
   err = hashmap_insert(m, &k1, &v1);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 1);
   linked_list_t *l1 = NULL;
   array_list_get(m->chains, 1, (void **)&l1);
   hashmap_entry_t *e1 = l1->head->value;
@@ -260,6 +277,7 @@ void test_hashmap_stack_insert(void) {
   size_t v2 = 21;
   err = hashmap_insert(m, &k2, &v2);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
   linked_list_t *l2 = NULL;
   array_list_get(m->chains, 1, (void **)&l2);
   hashmap_entry_t *e2 = l2->head->next->value;
@@ -271,12 +289,13 @@ void test_hashmap_stack_insert(void) {
   size_t v3 = 23;
   err = hashmap_insert(m, &k3, &v3);
   assert(err == CUTILS_SUCCESS);
+  assert(m->length == 2);
   linked_list_t *l3 = NULL;
   array_list_get(m->chains, 1, (void **)&l3);
   hashmap_entry_t *e3 = l3->head->value;
   assert(l3->length == 2);
   assert(*(size_t *)e3->value == 23);
-  assert(e3->original_key == &k3);
+  assert(e3->original_key == &k1);
 
   hashmap_free(m);
 

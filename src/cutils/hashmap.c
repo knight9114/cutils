@@ -17,7 +17,7 @@ cutils_error_t hashmap_init(hashmap_t *m, size_t nchains,
   }
 
   m->length = 0;
-  m->nchains = nchains;
+  m->nchains = nchains > 0 ? nchains : 1;
   m->nlinks = 0;
   m->hash = hash;
   m->key_cmp = key_cmp;
@@ -38,13 +38,12 @@ cutils_error_t hashmap_init(hashmap_t *m, size_t nchains,
   for (size_t i = 0; i < m->nchains; i++) {
     linked_list_t *l = malloc(sizeof(linked_list_t));
     if (!l) {
-      // Clean up previously allocated lists
       m->chains->length = i;
       array_list_free(m->chains);
       free(m->chains);
       return CUTILS_ALLOCATION_ERROR;
     }
-    // Entries are freed manually in hashmap_free, so pass NULL for free functions
+
     err = linked_list_init(l, NULL, NULL);
     if (err != CUTILS_SUCCESS) {
       free(l);
@@ -53,7 +52,6 @@ cutils_error_t hashmap_init(hashmap_t *m, size_t nchains,
       free(m->chains);
       return err;
     }
-    // This push will not fail if logic is correct
     array_list_push(m->chains, l);
   }
 
@@ -61,33 +59,35 @@ cutils_error_t hashmap_init(hashmap_t *m, size_t nchains,
 }
 
 void hashmap_free(void *ptr) {
-  if (ptr) {
-    hashmap_t *m = ptr;
-    if (m->chains) {
-      for (size_t i = 0; i < m->chains->length; i++) {
-        linked_list_t *l = NULL;
-        array_list_get(m->chains, i, (void **)&l);
-        if (l) {
-          linked_list_node_t *curr = l->head;
-          while (curr) {
-            hashmap_entry_t *entry = curr->value;
-            if (entry) {
-              if (m->key_free) {
-                m->key_free(entry->original_key);
-              }
-              if (m->inner_free) {
-                m->inner_free(entry->value);
-              }
-              free(entry);
+  if (!ptr) {
+    return;
+  }
+
+  hashmap_t *m = ptr;
+  if (m->chains) {
+    for (size_t i = 0; i < m->chains->length; i++) {
+      linked_list_t *l = NULL;
+      array_list_get(m->chains, i, (void **)&l);
+      if (l) {
+        linked_list_node_t *curr = l->head;
+        while (curr) {
+          hashmap_entry_t *entry = curr->value;
+          if (entry) {
+            if (m->key_free) {
+              m->key_free(entry->original_key);
             }
-            curr = curr->next;
+            if (m->inner_free) {
+              m->inner_free(entry->value);
+            }
+            free(entry);
           }
+          curr = curr->next;
         }
       }
-      array_list_free(m->chains);
     }
-    free(m);
+    array_list_free(m->chains);
   }
+  free(m);
 }
 
 cutils_error_t hashmap_resize(hashmap_t *m, size_t nchains) {
@@ -95,23 +95,39 @@ cutils_error_t hashmap_resize(hashmap_t *m, size_t nchains) {
     return CUTILS_NULL_ERROR;
   }
 
-  array_list_t *update = malloc(sizeof(array_list_t));
-  cutils_error_t err = array_list_init(update, nchains, linked_list_free, NULL);
+  if (nchains == 0) {
+    nchains = 1;
+  }
+
+  array_list_t *new_chains = malloc(sizeof(array_list_t));
+  if (!new_chains) {
+    return CUTILS_ALLOCATION_ERROR;
+  }
+
+  cutils_error_t err =
+      array_list_init(new_chains, nchains, linked_list_free, NULL);
   if (err != CUTILS_SUCCESS) {
-    free(update);
+    free(new_chains);
     return err;
   }
 
   for (size_t i = 0; i < nchains; i++) {
     linked_list_t *l = malloc(sizeof(linked_list_t));
+    if (!l) {
+      new_chains->length = i;
+      array_list_free(new_chains);
+      free(new_chains);
+      return CUTILS_ALLOCATION_ERROR;
+    }
     err = linked_list_init(l, NULL, NULL);
     if (err != CUTILS_SUCCESS) {
-      update->length = i;
-      array_list_free(update);
-      free(update);
+      free(l);
+      new_chains->length = i;
+      array_list_free(new_chains);
+      free(new_chains);
       return err;
     }
-    array_list_push(update, l);
+    array_list_push(new_chains, l);
   }
 
   size_t nlinks = 0;
@@ -119,21 +135,21 @@ cutils_error_t hashmap_resize(hashmap_t *m, size_t nchains) {
     linked_list_t *l = NULL;
     array_list_get(m->chains, i, (void **)&l);
 
-    while (l->length > 0) {
-      hashmap_entry_t *entry = NULL;
-      linked_list_pop_front(l, (void **)&entry);
-
-      size_t key = entry->key % nchains;
-      linked_list_t *u = NULL;
-      array_list_get(update, key, (void **)&u);
-      linked_list_push_back(u, entry);
-
-      nlinks = (nlinks < u->length) ? u->length : nlinks;
+    linked_list_node_t *curr = l->head;
+    while (curr) {
+      hashmap_entry_t *entry = curr->value;
+      size_t new_idx = entry->key % nchains;
+      linked_list_t *new_l = NULL;
+      array_list_get(new_chains, new_idx, (void **)&new_l);
+      linked_list_push_back(new_l, entry);
+      nlinks = (nlinks < new_l->length) ? new_l->length : nlinks;
+      curr = curr->next;
     }
+    l->length = 0;
   }
 
   array_list_free(m->chains);
-  m->chains = update;
+  m->chains = new_chains;
   m->nlinks = nlinks;
   m->nchains = nchains;
 
@@ -158,12 +174,13 @@ cutils_error_t hashmap_insert(hashmap_t *m, void *key, void *value) {
     hashmap_entry_t *entry = curr->value;
     if (entry->key == hash && m->key_cmp(entry->original_key, key)) {
       if (m->key_free) {
-        m->key_free(entry->original_key);
+        m->key_free(key);
       }
+
       if (m->inner_free) {
         m->inner_free(entry->value);
       }
-      entry->original_key = key;
+
       entry->value = value;
       return CUTILS_SUCCESS;
     }

@@ -24,7 +24,7 @@ typedef struct json_value {
     char *string;
     array_list_t *array;
     hashmap_t *object;
-  } as;
+  } value;
 } json_value_t;
 
 cutils_error_t json_parse(const char *text, json_value_t **value);

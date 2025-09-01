@@ -33,13 +33,13 @@ void json_value_free(void *ptr) {
   json_value_t *v = ptr;
   switch (v->type) {
   case JSON_STRING:
-    free(v->as.string);
+    free(v->value.string);
     break;
   case JSON_ARRAY:
-    array_list_free(v->as.array);
+    array_list_free(v->value.array);
     break;
   case JSON_OBJECT:
-    hashmap_free(v->as.object);
+    hashmap_free(v->value.object);
     break;
   case JSON_NULL:
   case JSON_BOOLEAN:
@@ -94,7 +94,7 @@ static json_value_t *_parse_literal(parser_t *p, const char *literal,
       return NULL;
     }
     if (type == JSON_BOOLEAN) {
-      v->as.boolean = boolean_value;
+      v->value.boolean = boolean_value;
     }
     return v;
   }
@@ -116,7 +116,7 @@ static json_value_t *_parse_number(parser_t *p) {
     p->err = CUTILS_ALLOCATION_ERROR;
     return NULL;
   }
-  v->as.number = num;
+  v->value.number = num;
   return v;
 }
 
@@ -241,7 +241,7 @@ static json_value_t *_parse_string(parser_t *p) {
     free(str);
     return NULL;
   }
-  v->as.string = str;
+  v->value.string = str;
   return v;
 }
 
@@ -260,7 +260,7 @@ static json_value_t *_parse_array(parser_t *p) {
       p->err = CUTILS_ALLOCATION_ERROR;
       return NULL;
     }
-    v->as.array = arr;
+    v->value.array = arr;
     return v;
   }
 
@@ -285,7 +285,7 @@ static json_value_t *_parse_array(parser_t *p) {
     p->err = CUTILS_ALLOCATION_ERROR;
     return NULL;
   }
-  v->as.array = arr;
+  v->value.array = arr;
   return v;
 }
 
@@ -304,7 +304,7 @@ static json_value_t *_parse_object(parser_t *p) {
       p->err = CUTILS_ALLOCATION_ERROR;
       return NULL;
     }
-    v->as.object = obj;
+    v->value.object = obj;
     return v;
   }
 
@@ -336,7 +336,7 @@ static json_value_t *_parse_object(parser_t *p) {
       return NULL;
     }
 
-    hashmap_insert(obj, key_val->as.string, val);
+    hashmap_insert(obj, key_val->value.string, val);
     free(key_val); // Free the container, not the string itself
   } while (_match(p, ','));
 
@@ -352,7 +352,7 @@ static json_value_t *_parse_object(parser_t *p) {
     p->err = CUTILS_ALLOCATION_ERROR;
     return NULL;
   }
-  v->as.object = obj;
+  v->value.object = obj;
   return v;
 }
 

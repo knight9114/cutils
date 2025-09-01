@@ -19,13 +19,13 @@ void test_parse_literals(void) {
   err = json_parse("true", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_BOOLEAN);
-  assert(val->as.boolean == true);
+  assert(val->value.boolean == true);
   json_value_free(val);
 
   err = json_parse("false", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_BOOLEAN);
-  assert(val->as.boolean == false);
+  assert(val->value.boolean == false);
   json_value_free(val);
 
   printf("success\n");
@@ -39,13 +39,13 @@ void test_parse_numbers(void) {
   err = json_parse("123", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_NUMBER);
-  assert(val->as.number == 123);
+  assert(val->value.number == 123);
   json_value_free(val);
 
   err = json_parse("-123.45e-2", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_NUMBER);
-  assert(fabs(val->as.number - (-1.2345)) < 1e-9);
+  assert(fabs(val->value.number - (-1.2345)) < 1e-9);
   json_value_free(val);
 
   printf("success\n");
@@ -59,19 +59,19 @@ void test_parse_strings(void) {
   err = json_parse("\"hello world\"", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_STRING);
-  assert(strcmp(val->as.string, "hello world") == 0);
+  assert(strcmp(val->value.string, "hello world") == 0);
   json_value_free(val);
 
   err = json_parse("\"\\\"\\\\\\/\\b\\f\\n\\r\\t\"", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_STRING);
-  assert(strcmp(val->as.string, "\"\\/\b\f\n\r\t") == 0);
+  assert(strcmp(val->value.string, "\"\\/\b\f\n\r\t") == 0);
   json_value_free(val);
 
   err = json_parse("\"\\u20AC\"", &val); // Euro sign
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_STRING);
-  assert(strcmp(val->as.string, "€") == 0);
+  assert(strcmp(val->value.string, "€") == 0);
   json_value_free(val);
 
   printf("success\n");
@@ -85,19 +85,19 @@ void test_parse_array(void) {
   err = json_parse("[ 1, \"two\", true, null ]", &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_ARRAY);
-  assert(val->as.array->length == 4);
+  assert(val->value.array->length == 4);
 
   json_value_t *item = NULL;
-  array_list_get(val->as.array, 0, (void **)&item);
-  assert(item->type == JSON_NUMBER && item->as.number == 1);
+  array_list_get(val->value.array, 0, (void **)&item);
+  assert(item->type == JSON_NUMBER && item->value.number == 1);
 
-  array_list_get(val->as.array, 1, (void **)&item);
-  assert(item->type == JSON_STRING && strcmp(item->as.string, "two") == 0);
+  array_list_get(val->value.array, 1, (void **)&item);
+  assert(item->type == JSON_STRING && strcmp(item->value.string, "two") == 0);
 
-  array_list_get(val->as.array, 2, (void **)&item);
-  assert(item->type == JSON_BOOLEAN && item->as.boolean == true);
+  array_list_get(val->value.array, 2, (void **)&item);
+  assert(item->type == JSON_BOOLEAN && item->value.boolean == true);
 
-  array_list_get(val->as.array, 3, (void **)&item);
+  array_list_get(val->value.array, 3, (void **)&item);
   assert(item->type == JSON_NULL);
 
   json_value_free(val);
@@ -115,20 +115,20 @@ void test_parse_object(void) {
   err = json_parse(json_text, &val);
   assert(err == CUTILS_SUCCESS);
   assert(val->type == JSON_OBJECT);
-  assert(val->as.object->length == 3);
+  assert(val->value.object->length == 3);
 
   json_value_t *item = NULL;
-  hashmap_get(val->as.object, "a", (void **)&item);
-  assert(item->type == JSON_NUMBER && item->as.number == 1);
+  hashmap_get(val->value.object, "a", (void **)&item);
+  assert(item->type == JSON_NUMBER && item->value.number == 1);
 
-  hashmap_get(val->as.object, "b", (void **)&item);
-  assert(item->type == JSON_ARRAY && item->as.array->length == 2);
+  hashmap_get(val->value.object, "b", (void **)&item);
+  assert(item->type == JSON_ARRAY && item->value.array->length == 2);
 
-  hashmap_get(val->as.object, "c", (void **)&item);
+  hashmap_get(val->value.object, "c", (void **)&item);
   assert(item->type == JSON_OBJECT);
 
   json_value_t *nested_item = NULL;
-  hashmap_get(item->as.object, "d", (void **)&nested_item);
+  hashmap_get(item->value.object, "d", (void **)&nested_item);
   assert(nested_item->type == JSON_NULL);
 
   json_value_free(val);
